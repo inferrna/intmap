@@ -44,7 +44,6 @@ fn thread_get() {
         let counter = Arc::clone(&counter);
         let handle = thread::spawn(move || {
             let val = hm.lock().unwrap().get(ev.0).unwrap().to_owned();
-            println!("{} vs {}", val, ev.1);
             let mut num = counter.lock().unwrap();
             *num += if val == ev.1.to_string() {1} else {0};
         });
