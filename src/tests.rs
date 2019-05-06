@@ -1,7 +1,6 @@
-use crate::{IntMap, Entry};
+use crate::IntMap;
 use std::thread;
 use std::sync::{Arc, Mutex};
-use core::borrow::Borrow;
 
 #[test]
 fn create_and_put() {
@@ -22,20 +21,27 @@ fn not_exists() {
 }
 
 #[test]
-fn contains() {
+fn contains_value() {
     let mut hm = IntMap::<String>::new(8);
     hm.put(99, "Alley".to_string());
     hm.put(73, "Street".to_string());
     assert_eq!(hm.contains_value("Alley".to_string()), true);
     assert_eq!(hm.contains_value("Streets".to_string()), false);
+}
+
+#[test]
+fn contains_key() {
+    let mut hm = IntMap::<String>::new(8);
+    hm.put(99, "Alley".to_string());
+    hm.put(73, "Street".to_string());
     assert_eq!(hm.contains_key(73), true);
     assert_eq!(hm.contains_key(88), false);
 }
 
 #[test]
 fn thread_get() {
-    let mut hm = Arc::new(Mutex::new(IntMap::<String>::new(8)));
-    let mut counter = Arc::new(Mutex::new(0));
+    let hm = Arc::new(Mutex::new(IntMap::<String>::new(8)));
+    let counter = Arc::new(Mutex::new(0));
     hm.lock().unwrap().put(99, "Alley".to_string());
     hm.lock().unwrap().put(73, "Street".to_string());
     let mut handles = vec![];
@@ -45,7 +51,7 @@ fn thread_get() {
         let handle = thread::spawn(move || {
             let val = hm.lock().unwrap().get(ev.0).unwrap().to_owned();
             let mut num = counter.lock().unwrap();
-            *num += if val == ev.1.to_string() {1} else {0};
+            *num += (val == ev.1.to_string() ) as usize;
         });
         handles.push(handle);
     }
@@ -57,7 +63,7 @@ fn thread_get() {
 
 #[test]
 fn thread_put() {
-    let mut hm = Arc::new(Mutex::new(IntMap::<String>::new(8)));
+    let hm = Arc::new(Mutex::new(IntMap::<String>::new(8)));
     let mut handles = vec![];
     for ev in &[(99, "Alley"), (73, "Street")] {
         let hm = Arc::clone(&hm);
@@ -73,3 +79,4 @@ fn thread_put() {
     assert_eq!(hma.get(99).unwrap(), &"Alley".to_string());
     assert_eq!(hma.remove(73).unwrap(), "Street".to_string());
 }
+

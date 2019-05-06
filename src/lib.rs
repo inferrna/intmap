@@ -14,7 +14,7 @@ impl<T> Entry<T> {
 
 pub struct IntMap<T> {
     entries: Vec<Vec<Entry<T>>>,
-    stride: Keytype
+    stride: Keytype,
 }
 
 impl<T> IntMap<T> {
@@ -36,7 +36,7 @@ impl<T> IntMap<T> {
     pub fn contains_key(&self, key: Keytype) -> bool {
         let pos = self.find_pos(key);
         match pos {
-            Some(i) => true,
+            Some(_) => true,
             None => false
         }
     }
@@ -60,7 +60,7 @@ impl<T: PartialEq> IntMap<T> {
     pub fn contains_value(&self, value: T) -> bool {
         let res = self.entries.iter().flatten().find(|e| e.value == value);
         match res {
-            Some(v) => true,
+            Some(_) => true,
             None => false
         }
     }
