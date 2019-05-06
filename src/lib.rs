@@ -13,6 +13,7 @@ impl<T> Entry<T> {
 }
 
 pub struct IntMap<T> {
+    /* Double hashing implemented with nested vectors */
     entries: Vec<Vec<Entry<T>>>,
     stride: Keytype,
 }
@@ -23,6 +24,7 @@ impl<T> IntMap<T> {
                   stride: stride}
     }
     fn find_pos (&self, key: Keytype) -> Option<usize> {
+        /* Remainder as secondary hash value */
         return self.entries[key % self.stride].iter().position(|e| e.key == key);
     }
     pub fn put(&mut self, key: Keytype, value: T) {
@@ -50,12 +52,15 @@ impl<T> IntMap<T> {
     pub fn remove(&mut self, key: Keytype) -> Option<T> {
         let pos = self.find_pos(key);
         if let Some(i) = pos {
+            /* Order doesn't matter, so I use swap_remove as it is O(1) operation */
             return Some(self.entries[key % self.stride].swap_remove(i).value);
         } else {
             return None;
         }
     }
 }
+
+/* contains_value implemented only for PartialEq capable types */
 impl<T: PartialEq> IntMap<T> {
     pub fn contains_value(&self, value: T) -> bool {
         let res = self.entries.iter().flatten().find(|e| e.value == value);

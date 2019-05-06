@@ -3,11 +3,20 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 
 #[test]
-fn create_and_put() {
+fn put_and_get() {
     let mut hm = IntMap::<String>::new(8);
     hm.put(99, "Alley".to_string());
     hm.put(73, "Street".to_string());
     assert_eq!(hm.get(99).unwrap(), &"Alley".to_string());
+    assert_eq!(hm.get(73).unwrap(), &"Street".to_string());
+}
+
+#[test]
+fn remove() {
+    let mut hm = IntMap::<String>::new(8);
+    hm.put(99, "Alley".to_string());
+    hm.put(73, "Street".to_string());
+    assert_eq!(hm.remove(99).unwrap(), "Alley".to_string());
     assert_eq!(hm.remove(73).unwrap(), "Street".to_string());
 }
 
