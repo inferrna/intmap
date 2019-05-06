@@ -1,12 +1,12 @@
-type keytype = usize;
+type Keytype = usize;
 
 struct Entry<T> {
-    pub key: keytype,
+    pub key: Keytype,
     pub value: T
 }
 
 impl<T> Entry<T> {
-    pub fn new (key: keytype, value: T) -> Entry<T> {
+    pub fn new (key: Keytype, value: T) -> Entry<T> {
         Entry { key: key,
               value: value }
     }
@@ -14,18 +14,18 @@ impl<T> Entry<T> {
 
 pub struct IntMap<T> {
     entries: Vec<Vec<Entry<T>>>,
-    stride: keytype
+    stride: Keytype
 }
 
 impl<T> IntMap<T> {
-    pub fn new (stride: keytype) -> IntMap<T> {
+    pub fn new (stride: Keytype) -> IntMap<T> {
         IntMap { entries: (0..stride).map(|_| Vec::with_capacity(stride)).collect(),
                   stride: stride}
     }
-    fn find_pos (&self, key: keytype) -> Option<usize> {
+    fn find_pos (&self, key: Keytype) -> Option<usize> {
         return self.entries[key % self.stride].iter().position(|e| e.key == key);
     }
-    pub fn put(&mut self, key: keytype, value: T) {
+    pub fn put(&mut self, key: Keytype, value: T) {
         let pos = self.find_pos(key);
         if let Some(i) = pos {
             self.entries[key % self.stride][i].value = value;
@@ -33,14 +33,21 @@ impl<T> IntMap<T> {
             self.entries[key % self.stride].push(Entry::new(key, value));
         }
     }
-    pub fn get(&self, key: keytype) -> Option<&T> {
+    pub fn contains_key(&self, key: Keytype) -> bool {
+        let pos = self.find_pos(key);
+        match pos {
+            Some(i) => true,
+            None => false
+        }
+    }
+    pub fn get(&self, key: Keytype) -> Option<&T> {
         let pos = self.find_pos(key);
         match pos {
             Some(i) => Some(&self.entries[key % self.stride][i].value),
             None => None
         }
     }
-    pub fn remove(&mut self, key: keytype) -> Option<T> {
+    pub fn remove(&mut self, key: Keytype) -> Option<T> {
         let pos = self.find_pos(key);
         if let Some(i) = pos {
             return Some(self.entries[key % self.stride].swap_remove(i).value);
@@ -49,11 +56,15 @@ impl<T> IntMap<T> {
         }
     }
 }
-  
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+impl<T: PartialEq> IntMap<T> {
+    pub fn contains_value(&self, value: T) -> bool {
+        let res = self.entries.iter().flatten().find(|e| e.value == value);
+        match res {
+            Some(v) => true,
+            None => false
+        }
     }
 }
+
+#[cfg(test)]
+mod tests;
