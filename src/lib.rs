@@ -40,6 +40,14 @@ impl<T> IntMap<T> {
             None => None
         }
     }
+    pub fn remove(&mut self, key: keytype) -> Option<T> {
+        let pos = self.find_pos(key);
+        if let Some(i) = pos {
+            return Some(self.entries[key % self.stride].swap_remove(i).value);
+        } else {
+            return None;
+        }
+    }
 }
   
 #[cfg(test)]
