@@ -18,6 +18,8 @@ fn remove() {
     hm.put(73, "Street".to_string());
     assert_eq!(hm.remove(99).unwrap(), "Alley".to_string());
     assert_eq!(hm.remove(73).unwrap(), "Street".to_string());
+    assert_eq!(hm.get(99), None);
+    assert_eq!(hm.remove(73), None);
 }
 
 #[test]
