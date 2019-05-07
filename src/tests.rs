@@ -49,18 +49,19 @@ fn contains_key() {
 
 #[test]
 fn thread_get() {
-    let hm = Arc::new(Mutex::new(IntMap::<String>::new(8)));
+    let mut hm = IntMap::<String>::new(8);
     let counter = Arc::new(Mutex::new(0));
-    hm.lock().unwrap().put(99, "Alley".to_string());
-    hm.lock().unwrap().put(73, "Street".to_string());
+    hm.put(99, "Alley".to_string());
+    hm.put(73, "Street".to_string());
+    let hma = Arc::new(hm);
     let mut handles = vec![];
     for ev in &[(99, "Alley"), (73, "Street")] {
-        let hm = Arc::clone(&hm);
-        let counter = Arc::clone(&counter);
+        let hm = hma.clone();
+        let counter = counter.clone();
         let handle = thread::spawn(move || {
-            let val = hm.lock().unwrap().get(ev.0).unwrap().to_owned();
+            let val = hm.get(ev.0).unwrap();
             let mut num = counter.lock().unwrap();
-            *num += (val == ev.1.to_string() ) as usize;
+            *num += (*val == ev.1.to_string() ) as usize;
         });
         handles.push(handle);
     }
