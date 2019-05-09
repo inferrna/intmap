@@ -30,7 +30,7 @@ fn not_exists() {
     assert_eq!(hm.get(88), None);
     assert_eq!(hm.remove(72), None);
 }
-
+/*
 #[test]
 fn contains_value() {
     let mut hm = IntMap::<String>::new(8);
@@ -38,7 +38,7 @@ fn contains_value() {
     hm.put(73, "Street".to_string());
     assert_eq!(hm.contains_value("Alley".to_string()), true);
     assert_eq!(hm.contains_value("Streets".to_string()), false);
-}
+}*/
 
 #[test]
 fn contains_key() {
