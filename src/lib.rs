@@ -47,7 +47,7 @@ impl<T> IntMap<T> {
     pub fn put(&mut self, key: Keytype, value: T) {
         let bkt_idx= key % self.stride;
         if let Some(i) = self.find_pos(key) {
-            self.entries[key % self.stride][i].as_mut().unwrap().value = value;
+            self.entries[bkt_idx][i].as_mut().unwrap().value = value;
         } else {
             let idx = self.find_free(bkt_idx);
             self.entries[bkt_idx][idx] = Some(Entry::new(key, value));
@@ -71,7 +71,7 @@ impl<T> IntMap<T> {
     pub fn remove(&mut self, key: Keytype) -> Option<T> {
         let bkt_idx= key % self.stride;
         if let Some(i) = self.find_pos(key) {
-            let mut res = &mut self.entries[key % self.stride][i];
+            let mut res = &mut self.entries[bkt_idx][i];
             let rs = res.take().unwrap().value;
             return Some(rs);
         } else {
