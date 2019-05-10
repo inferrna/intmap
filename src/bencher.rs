@@ -17,7 +17,7 @@ fn many_put(cnt: usize, stride: usize) {
 }
 
 fn bench_put(c: &mut Criterion) {
-    for (cnt, stride) in vec![(100000usize, 2000usize), (100000, 200), (100000, 20), (10000, 2000), (10000, 200), (10000, 20)] {
+    for (cnt, stride) in vec![(100000usize, 2000usize), (100000, 1000), (100000, 200), (10000, 2000), (10000, 1000), (10000, 200)] {
         c.bench_function(format!("put {} {}", cnt, stride).as_mut_str(), move |b| b.iter(|| many_put(black_box(cnt), black_box(stride))));
     }
 }
