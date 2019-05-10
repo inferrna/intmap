@@ -36,7 +36,7 @@ fn bench_put(c: &mut Criterion) {
 }
 
 fn bench_new(c: &mut Criterion) {
-    for (cnt, stride) in vec![(100000usize, 2000usize), (100000, 1000), (100000, 200), (10000, 2000), (10000, 1000), (10000, 200)] {
+    for stride in vec![2000usize, 1000,  200] {
         c.bench_function(format!("create {} chained map", stride).as_mut_str(), move |b| b.iter(|| many_new(black_box(stride))));
     }
 }
