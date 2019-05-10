@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-type Keytype = usize;
+pub type Keytype = usize;
 
 struct Entry<T> {
     pub key: Keytype,
