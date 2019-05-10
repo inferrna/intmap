@@ -2,6 +2,7 @@ use crate::IntMap;
 use std::thread;
 use std::sync::{Arc, Mutex};
 
+
 #[test]
 fn put_and_get() {
     let mut hm = IntMap::<String>::new(8);
@@ -91,4 +92,3 @@ fn thread_put() {
     assert_eq!(hma.get(99).unwrap(), &"Alley".to_string());
     assert_eq!(hma.remove(73).unwrap(), "Street".to_string());
 }
-
