@@ -23,7 +23,7 @@ pub struct IntMap<T> {
 impl<T> IntMap<T> {
     pub fn new (stride: Keytype) -> IntMap<T> {
 
-        IntMap { entries: (0..stride).map(|_| (0..stride).map(|_| None).collect()).collect(),
+        IntMap { entries: (0..stride).map(|_| vec![]).collect(),
                   stride: stride}
     }
     fn find_pos (&self, key: Keytype) -> Option<usize> {
