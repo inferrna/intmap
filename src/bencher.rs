@@ -18,7 +18,7 @@ fn many_put(cnt: usize, stride: usize) {
 }
 
 fn many_new(stride: usize) {
-    let mut hm = black_box(IntMap::<String>::new(stride));
+    let hm = black_box(IntMap::<String>::new(stride));
 }
 
 fn many_get(hm: Arc<IntMap<String>>, cnt: usize ) {
