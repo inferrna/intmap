@@ -109,13 +109,22 @@ impl<T> IntMap<T> {
     pub fn contains_key(&mut self, key: Keytype) -> bool {
         self.real_map.lock().unwrap().contains_key(key)
     }
-    pub fn get(&self, key: Keytype) -> Option<&T> {
-        let map = self.real_map.lock().unwrap();
-        let res = map.get(key);
-        return res;
-    }
     pub fn remove(&mut self, key: Keytype) -> Option<T> {
         self.real_map.lock().unwrap().remove(key)
+    }
+}
+
+
+unsafe impl<T: Clone> Send for IntMap<T> {}
+unsafe impl<T: Clone> Sync for IntMap<T> {}
+
+impl<T: Clone> IntMap<T> {
+    pub fn get(&self, key: Keytype) -> Option<T> {
+        let res = self.real_map.lock().unwrap().get(key).cloned();
+        match res {
+            Some(v) => Some(v.clone()),
+            None => None
+        }
     }
 }
 
@@ -124,6 +133,13 @@ impl<T: PartialEq> IntMap<T> {
         self.real_map.lock().unwrap().contains_value(value)
     }
 }
+
+impl<T> Clone for IntMap<T> {
+    fn clone(&self) -> Self {
+        return IntMap { real_map: self.real_map.clone() }
+    }
+}
+
 
 #[cfg(test)]
 mod tests;
