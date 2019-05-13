@@ -8,8 +8,8 @@ fn put_and_get() {
     let mut hm = IntMap::<String>::new(8);
     hm.put(99, "Alley".to_string());
     hm.put(73, "Street".to_string());
-    assert_eq!(hm.get(99).unwrap(), &"Alley".to_string());
-    assert_eq!(hm.get(73).unwrap(), &"Street".to_string());
+    assert_eq!(hm.get(99).unwrap(), "Alley".to_string());
+    assert_eq!(hm.get(73).unwrap(), "Street".to_string());
 }
 
 #[test]
@@ -89,6 +89,6 @@ fn thread_put() {
         handle.join().unwrap();
     }
     let mut hma = hm.lock().unwrap();
-    assert_eq!(hma.get(99).unwrap(), &"Alley".to_string());
+    assert_eq!(hma.get(99).unwrap(), "Alley".to_string());
     assert_eq!(hma.remove(73).unwrap(), "Street".to_string());
 }
