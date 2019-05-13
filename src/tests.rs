@@ -80,14 +80,15 @@ fn thread_get_i64() {
     let counter = Arc::new(Mutex::new(0));
     hm.put(99, 999);
     hm.put(73, -888);
+    let hma = Arc::new(hm);
     let mut handles = vec![];
-    for ev in &[(99, 999), (73, -888)] {
-        let hma = hm.clone();
+    for ev in &[(99, 999i64), (73, -888)] {
+        let hm = hma.clone();
         let counter = counter.clone();
         let handle = thread::spawn(move || {
-            let val = hma.get(ev.0).unwrap();
+            let val = hm.get(ev.0).unwrap();
             let mut num = counter.lock().unwrap();
-            *num += (val == ev.1 ) as usize;
+            *num += (*val == ev.1 ) as usize;
         });
         handles.push(handle);
     }
