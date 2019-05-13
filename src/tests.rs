@@ -51,7 +51,7 @@ fn contains_key() {
 }
 
 #[test]
-fn thread_get() {
+fn thread_get_string() {
     let mut hm = IntMap::<String>::new(8);
     let counter = Arc::new(Mutex::new(0));
     hm.put(99, "Alley".to_string());
@@ -64,7 +64,30 @@ fn thread_get() {
         let handle = thread::spawn(move || {
             let val = hm.get(ev.0).unwrap();
             let mut num = counter.lock().unwrap();
-            *num += (*val == ev.1.to_string() ) as usize;
+            *num += (val == ev.1 ) as usize;
+        });
+        handles.push(handle);
+    }
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    assert_eq!(*counter.lock().unwrap(), 2);
+}
+
+#[test]
+fn thread_get_i64() {
+    let mut hm = IntMap::<i64>::new(8);
+    let counter = Arc::new(Mutex::new(0));
+    hm.put(99, 999);
+    hm.put(73, -888);
+    let mut handles = vec![];
+    for ev in &[(99, 999), (73, -888)] {
+        let hma = hm.clone();
+        let counter = counter.clone();
+        let handle = thread::spawn(move || {
+            let val = hma.get(ev.0).unwrap();
+            let mut num = counter.lock().unwrap();
+            *num += (val == ev.1 ) as usize;
         });
         handles.push(handle);
     }
