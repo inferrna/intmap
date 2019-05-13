@@ -21,7 +21,7 @@ fn many_new(stride: usize) {
     let mut hm = black_box(IntMap::<String>::new(stride));
 }
 
-fn many_get(hm: Arc<IntMap<String>>, cnt: usize, stride: usize) {
+fn many_get(hm: Arc<IntMap<String>>, cnt: usize ) {
     let mut rng = rand::thread_rng();
     for _ in 0..cnt {
         let k: Keytype = rng.gen_range(0, cnt);
@@ -51,7 +51,7 @@ fn bench_get(c: &mut Criterion) {
             hm.put(k, s);
         }
         let hma = Arc::new(hm);
-        c.bench_function(format!("get from {} chained map filled with {} values", stride, cnt).as_mut_str(), move |b| b.iter(|| many_get(hma.clone(),black_box(cnt), black_box(stride))));
+        c.bench_function(format!("get from {} chained map filled with {} values", stride, cnt).as_mut_str(), move |b| b.iter(|| many_get(hma.clone(),black_box(cnt))));
     }
 }
 
