@@ -1,8 +1,4 @@
-use std::ops::Deref;
 use std::sync::{Mutex, Arc};
-use core::borrow::Borrow;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 pub type Keytype = usize;
 
@@ -74,7 +70,7 @@ impl<T> _IntMap<T> {
     pub fn remove(&mut self, key: Keytype) -> Option<T> {
         let bkt_idx= key % self.stride;
         if let Some(i) = self.find_pos(key) {
-            let mut res = &mut self.entries[bkt_idx][i];
+            let res = &mut self.entries[bkt_idx][i];
             let rs = res.take().unwrap().value;
             return Some(rs);
         } else {
@@ -113,10 +109,6 @@ impl<T> IntMap<T> {
         self.real_map.lock().unwrap().remove(key)
     }
 }
-
-
-unsafe impl<T: Clone> Send for IntMap<T> {}
-unsafe impl<T: Clone> Sync for IntMap<T> {}
 
 impl<T: Clone> IntMap<T> {
     pub fn get(&self, key: Keytype) -> Option<T> {
