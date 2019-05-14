@@ -37,11 +37,11 @@ fn rehash() {
         vals.push((k, v.clone()));
         hm.put(k, v);
         for (e, v) in vals.choose_multiple(&mut rand::thread_rng(), 15) {
-            assert_eq!(Some(v), hm.get(*e), "at iteration {}", i);
+            assert_eq!(Some(v.to_string()), hm.get(*e), "at iteration {}", i);
         }
     }
-    for (e, v) in vals.iter() {
-        assert_eq!(Some(v), hm.get(*e));
+    for (e, v) in vals {
+        assert_eq!(Some(v), hm.get(e));
     }
 }
 
