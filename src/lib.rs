@@ -1,6 +1,3 @@
-extern crate backtrace;
-
-use backtrace::Backtrace;
 use std::cmp::min;
 
 pub type Keytype = usize;
@@ -14,12 +11,6 @@ impl<T> Entry<T> {
     pub fn new (key: Keytype, value: T) -> Entry<T> {
         Entry { key: key,
               value: value }
-    }
-}
-
-impl<T: std::fmt::Debug> std::fmt::Debug for Entry<T> {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(formatter, "[key: {:?}, value: {:?}]", self.key, self.value)
     }
 }
 
@@ -55,8 +46,6 @@ impl<T: std::fmt::Debug> IntMap<T> {
             off_next += self.entries.len();
             inc_cnt += 1;
         }
-        assert!(off_current<off_next, format!("off_current {} >= off_next {}, inc_cnt = {}", off_current, off_next, inc_cnt));
-        println!("pos for {} -> off_current is {}, off_next is {}", key, off_current, off_next);
         return self.entries.iter()
             .enumerate()
             .cycle()
@@ -86,12 +75,8 @@ impl<T: std::fmt::Debug> IntMap<T> {
             off_next += self.entries.len();
         }
         let fpos = self.entries.iter().cycle().skip(off_current).take(off_next - off_current).position(|e| e.is_none());
-        println!("{} free for {} -> off_current is {}, off_next is {}. Got fpos {:?}", req, key, off_current, off_next, fpos);
-        //println!("{:?}", bt);
-
         if let Some(i) = fpos {
             let res = (i + off_current) % self.entries.len();
-            println!("Return position is {} ", res);
             return Some(res);
         } else if req == self.stride {
             self.rehash();
@@ -113,7 +98,6 @@ impl<T: std::fmt::Debug> IntMap<T> {
         if let Some(i) = self.find_pos(key) {
             self.entries[i].as_mut().unwrap().value = value;
         } else {
-            println!("Call for free for {:?}", key);
             loop {
                 if let Some(idx) = self.find_free(key, 0) {
                     self.entries[idx] = Some(Entry::new(key, value));
@@ -121,8 +105,6 @@ impl<T: std::fmt::Debug> IntMap<T> {
                 }
             }
         }
-        println!("Current offsets is {:?}", self.offsets);
-        println!("Current entries is {:?}", self.entries);
     }
     pub fn contains_key(&mut self, key: Keytype) -> bool {
         let res = self.get(key);
