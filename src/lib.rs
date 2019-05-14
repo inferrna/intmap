@@ -1,4 +1,7 @@
-use std::ops::Deref;
+extern crate backtrace;
+
+use backtrace::Backtrace;
+use std::cmp::min;
 
 pub type Keytype = usize;
 
@@ -14,22 +17,27 @@ impl<T> Entry<T> {
     }
 }
 
+impl<T: std::fmt::Debug> std::fmt::Debug for Entry<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(formatter, "[key: {:?}, value: {:?}]", self.key, self.value)
+    }
+}
+
+
 pub struct IntMap<T> {
     /* Double hashing implemented with nested vectors */
     entries: Vec<Option<Entry<T>>>,
     offsets: Vec<usize>,
-    stride: Keytype,
-    step: Keytype
+    stride: Keytype
 }
 
-impl<T> IntMap<T> {
+impl<T: std::fmt::Debug> IntMap<T> {
     pub fn new (stride: Keytype) -> IntMap<T> {
         let mut offsets: Vec<usize> = (0..stride).map(|_| 0).collect();
         //offsets[0] = stride as usize;
         IntMap { entries: (0..stride*stride).map(|_| None).collect(),
                  offsets: offsets,
-                  stride: stride,
-                    step: stride}
+                  stride: stride}
     }
     fn get_offset(&self, key: Keytype) -> usize {
         let hash = key % self.stride;
@@ -41,22 +49,28 @@ impl<T> IntMap<T> {
     }
     fn find_pos (&self, key: Keytype) -> Option<usize> {
         /* Remainder as secondary hash value */
+        let mut inc_cnt = 0;
         let (off_current, mut off_next) = (self.get_offset(key), self.get_offset(key+1));
-        while off_next < off_current {
-            off_next += self.stride;
+        while off_next <= off_current {
+            off_next += self.entries.len();
+            inc_cnt += 1;
         }
-        assert!(off_current<off_next, format!("off_current {} >= off_next {}", off_current, off_next));
+        assert!(off_current<off_next, format!("off_current {} >= off_next {}, inc_cnt = {}", off_current, off_next, inc_cnt));
+        println!("pos for {} -> off_current is {}, off_next is {}", key, off_current, off_next);
         return self.entries.iter()
             .enumerate()
             .cycle()
             .skip(off_current)
             .take(off_next - off_current)
             .filter(|(i, e)| e.as_ref().is_some())
+            .skip_while(|(i, e)| e.as_ref().unwrap().key != key)
             .map(|(i, e)| i)
             .next();
     }
     fn rehash(&mut self) {
-        let mut new_map = IntMap::<T>::new(self.stride + self.step);
+        let filled = self.entries.iter().filter(|e| e.is_some()).count();
+        let stride_inc = min(1, (self.stride * filled) / self.entries.len());
+        let mut new_map = IntMap::<T>::new(self.stride+stride_inc);
         for o in &mut self.entries {
             if let Some(e) = o {
                 let es = o.take().unwrap();
@@ -65,31 +79,50 @@ impl<T> IntMap<T> {
         }
         *self = new_map;
     }
-    fn find_free (&mut self, key: Keytype, req: Keytype) -> usize {
-        let offset = self.get_offset(key);
-        let fpos = self.entries.iter().skip(offset).position(|e| e.is_none());
+    fn find_free (&mut self, key: Keytype, req: Keytype) -> Option<usize> {
+        //let bt = Backtrace::new();
+        let (off_current, mut off_next) = (self.get_offset(key), self.get_offset(key+1));
+        while off_next <= off_current {
+            off_next += self.entries.len();
+        }
+        let fpos = self.entries.iter().cycle().skip(off_current).take(off_next - off_current).position(|e| e.is_none());
+        println!("{} free for {} -> off_current is {}, off_next is {}. Got fpos {:?}", req, key, off_current, off_next, fpos);
+        //println!("{:?}", bt);
+
         if let Some(i) = fpos {
-            return i + offset;
+            let res = (i + off_current) % self.entries.len();
+            println!("Return position is {} ", res);
+            return Some(res);
         } else if req == self.stride {
             self.rehash();
-            return self.find_free(key, 0);
+            return None;
         } else {
             let next_key = key+1;
-            let want_free = self.get_offset(next_key);
-            let next_free = self.find_free(next_key, req+1);
-            self.entries.swap(want_free, next_free);
+            let want_free = self.get_offset(next_key) % self.entries.len();
             self.inc_offset(next_key);
-            return want_free;
+            if let Some(next_free) = self.find_free(next_key, req+1) {
+                dbg!(want_free); dbg!(next_free);
+                self.entries.swap(want_free, next_free);
+                return Some(want_free);
+            } else {
+                return None;
+            }
         }
     }
     pub fn put(&mut self, key: Keytype, value: T) {
-        let bkt_idx= key % self.stride;
         if let Some(i) = self.find_pos(key) {
             self.entries[i].as_mut().unwrap().value = value;
         } else {
-            let idx = self.find_free(bkt_idx, 0);
-            self.entries[idx] = Some(Entry::new(key, value));
+            println!("Call for free for {:?}", key);
+            loop {
+                if let Some(idx) = self.find_free(key, 0) {
+                    self.entries[idx] = Some(Entry::new(key, value));
+                    break;
+                }
+            }
         }
+        println!("Current offsets is {:?}", self.offsets);
+        println!("Current entries is {:?}", self.entries);
     }
     pub fn contains_key(&mut self, key: Keytype) -> bool {
         let res = self.get(key);
