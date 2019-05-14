@@ -1,8 +1,10 @@
 use crate::IntMap;
 use std::thread;
 use std::sync::{Arc, Mutex};
-use rand::Rng;
-
+use rand::{
+    Rng,
+    seq::SliceRandom
+};
 
 #[test]
 fn put_and_get() {
@@ -34,11 +36,13 @@ fn rehash() {
         let v = format!("Street - {}", k);
         vals.push((k, v.clone()));
         hm.put(k, v);
+        for (e, v) in vals.choose_multiple(&mut rand::thread_rng(), 15) {
+            assert_eq!(Some(v), hm.get(*e), "at iteration {}", i);
+        }
     }
-    for (i, (e, v)) in vals.iter().enumerate() {
-        assert_eq!(Some(v), hm.get(*e), "at iteration {}", i);
+    for (e, v) in vals.iter() {
+        assert_eq!(Some(v), hm.get(*e));
     }
-    //panic!("I want to believe.")
 }
 
 #[test]
