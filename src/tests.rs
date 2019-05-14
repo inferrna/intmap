@@ -1,6 +1,7 @@
 use crate::IntMap;
 use std::thread;
 use std::sync::{Arc, Mutex};
+use rand::Rng;
 
 
 #[test]
@@ -21,6 +22,23 @@ fn remove() {
     assert_eq!(hm.remove(73).unwrap(), "Street".to_string());
     assert_eq!(hm.get(99), None);
     assert_eq!(hm.remove(73), None);
+}
+
+#[test]
+fn rehash() {
+    let mut hm = IntMap::<String>::new(2);
+    let mut vals = vec![];
+    let mut rng = rand::thread_rng();
+    for i in 0..1555 {
+        let k = rng.gen_range(0, 99999);
+        let v = format!("Street - {}", k);
+        vals.push((k, v.clone()));
+        hm.put(k, v);
+    }
+    for (i, (e, v)) in vals.iter().enumerate() {
+        assert_eq!(Some(v), hm.get(*e), "at iteration {}", i);
+    }
+    //panic!("I want to believe.")
 }
 
 #[test]
