@@ -26,11 +26,11 @@ fn many_put_i32(cnt: usize, stride: usize) {
     }
 }
 
-fn many_new<T>(stride: usize) {
+fn many_new<T: std::fmt::Debug>(stride: usize) {
     let hm = black_box(IntMap::<T>::new(stride));
 }
 
-fn many_get<T: Clone>(hm: Arc<IntMap<T>>, cnt: usize ) {
+fn many_get<T>(hm: Arc<IntMap<T>>, cnt: usize ) where T: std::fmt::Debug + Clone {
     let mut rng = rand::thread_rng();
     for _ in 0..cnt {
         let k: Keytype = rng.gen_range(0, cnt);
