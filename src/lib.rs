@@ -1,4 +1,5 @@
 use std::cmp::min;
+use std::sync::{Arc, Mutex};
 
 pub type Keytype = usize;
 
@@ -15,18 +16,17 @@ impl<T> Entry<T> {
 }
 
 
-pub struct IntMap<T> {
-    /* Double hashing implemented with nested vectors */
+pub struct _IntMap<T> {
     entries: Vec<Option<Entry<T>>>,
     offsets: Vec<usize>,
     stride: Keytype
 }
 
-impl<T: std::fmt::Debug> IntMap<T> {
-    pub fn new (stride: Keytype) -> IntMap<T> {
+impl<T> _IntMap<T> {
+    pub fn new (stride: Keytype) -> _IntMap<T> {
         let mut offsets: Vec<usize> = (0..stride).map(|_| 0).collect();
         //offsets[0] = stride as usize;
-        IntMap { entries: (0..stride*stride).map(|_| None).collect(),
+        _IntMap { entries: (0..stride*stride).map(|_| None).collect(),
                  offsets: offsets,
                   stride: stride}
     }
@@ -59,7 +59,7 @@ impl<T: std::fmt::Debug> IntMap<T> {
     fn rehash(&mut self) {
         let filled = self.entries.iter().filter(|e| e.is_some()).count();
         let stride_inc = min(1, (self.stride * filled) / self.entries.len());
-        let mut new_map = IntMap::<T>::new(self.stride+stride_inc);
+        let mut new_map = _IntMap::<T>::new(self.stride+stride_inc);
         for o in &mut self.entries {
             if let Some(e) = o {
                 let es = o.take().unwrap();
@@ -133,13 +133,57 @@ impl<T: std::fmt::Debug> IntMap<T> {
 }
 
 /* contains_value implemented only for PartialEq capable types */
-impl<T: PartialEq> IntMap<T> {
+impl<T: PartialEq> _IntMap<T> {
     pub fn contains_value(&self, value: T) -> bool {
         let res = self.entries.iter().filter_map(|e| e.as_ref()).find(|e| e.value == value);
         match res {
             Some(_) => true,
             None => false
         }
+    }
+}
+
+pub struct IntMap<T> {
+    real_map: Arc<Mutex<_IntMap<T>>>
+}
+
+impl<T> IntMap<T> {
+    pub fn new (stride: Keytype) -> IntMap<T> {
+        let map = _IntMap::<T>::new(stride);
+        IntMap { real_map: Arc::new(Mutex::new(map)) }
+    }
+    pub fn put(&mut self, key: Keytype, value: T) {
+        self.real_map.lock().unwrap().put(key, value)
+    }
+    pub fn contains_key(&mut self, key: Keytype) -> bool {
+        self.real_map.lock().unwrap().contains_key(key)
+    }
+    pub fn remove(&mut self, key: Keytype) -> Option<T> {
+        self.real_map.lock().unwrap().remove(key)
+    }
+}
+
+impl<T: Clone> IntMap<T> {
+    pub fn get(&self, key: Keytype) -> Option<T> {
+        let res = self.real_map.lock().unwrap().get(key).cloned();
+        match res {
+            Some(v) => Some(v.clone()),
+            None => None
+        }
+    }
+}
+
+impl<T> Clone for IntMap<T> {
+    fn clone(&self) -> Self {
+        return IntMap { real_map: self.real_map.clone() }
+    }
+}
+
+
+
+impl<T: PartialEq> IntMap<T> {
+    pub fn contains_value(&self, value: T) -> bool {
+        self.real_map.lock().unwrap().contains_value(value)
     }
 }
 

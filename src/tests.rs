@@ -11,8 +11,8 @@ fn put_and_get() {
     let mut hm = IntMap::<String>::new(8);
     hm.put(99, "Alley".to_string());
     hm.put(73, "Street".to_string());
-    assert_eq!(hm.get(99).unwrap(), &"Alley".to_string());
-    assert_eq!(hm.get(73).unwrap(), &"Street".to_string());
+    assert_eq!(hm.get(99).unwrap(), "Alley".to_string());
+    assert_eq!(hm.get(73).unwrap(), "Street".to_string());
 }
 
 #[test]
@@ -37,11 +37,11 @@ fn rehash() {
         vals.push((k, v.clone()));
         hm.put(k, v);
         for (e, v) in vals.choose_multiple(&mut rand::thread_rng(), 15) {
-            assert_eq!(Some(v), hm.get(*e), "at iteration {}", i);
+            assert_eq!(Some(v.to_string()), hm.get(*e), "at iteration {}", i);
         }
     }
     for (e, v) in vals.iter() {
-        assert_eq!(Some(v), hm.get(*e));
+        assert_eq!(Some(v.to_string()), hm.get(*e));
     }
 }
 
@@ -78,13 +78,12 @@ fn thread_get_string() {
     let counter = Arc::new(Mutex::new(0));
     hm.put(99, "Alley".to_string());
     hm.put(73, "Street".to_string());
-    let hma = Arc::new(hm);
     let mut handles = vec![];
     for ev in &[(99, "Alley"), (73, "Street")] {
-        let hm = hma.clone();
+        let hma = hm.clone();
         let counter = counter.clone();
         let handle = thread::spawn(move || {
-            let val = hm.get(ev.0).unwrap();
+            let val = hma.get(ev.0).unwrap();
             let mut num = counter.lock().unwrap();
             *num += (val == ev.1 ) as usize;
         });
@@ -102,15 +101,14 @@ fn thread_get_i64() {
     let counter = Arc::new(Mutex::new(0));
     hm.put(99, 999);
     hm.put(73, -888);
-    let hma = Arc::new(hm);
     let mut handles = vec![];
-    for ev in &[(99, 999i64), (73, -888)] {
-        let hm = hma.clone();
+    for ev in &[(99, 999), (73, -888)] {
+        let hma = hm.clone();
         let counter = counter.clone();
         let handle = thread::spawn(move || {
-            let val = hm.get(ev.0).unwrap();
+            let val = hma.get(ev.0).unwrap();
             let mut num = counter.lock().unwrap();
-            *num += (*val == ev.1 ) as usize;
+            *num += (val == ev.1 ) as usize;
         });
         handles.push(handle);
     }
@@ -122,19 +120,18 @@ fn thread_get_i64() {
 
 #[test]
 fn thread_put() {
-    let hm = Arc::new(Mutex::new(IntMap::<String>::new(8)));
+    let mut hm = IntMap::<String>::new(8);
     let mut handles = vec![];
     for ev in &[(99, "Alley"), (73, "Street")] {
-        let hm = Arc::clone(&hm);
+        let mut hma = hm.clone();
         let handle = thread::spawn(move || {
-            hm.lock().unwrap().put(ev.0, ev.1.to_string());
+            hma.put(ev.0, ev.1.to_string());
         });
         handles.push(handle);
     }
     for handle in handles {
         handle.join().unwrap();
     }
-    let mut hma = hm.lock().unwrap();
-    assert_eq!(hma.get(99).unwrap(), &"Alley".to_string());
-    assert_eq!(hma.remove(73).unwrap(), "Street".to_string());
+    assert_eq!(hm.get(99).unwrap(), "Alley".to_string());
+    assert_eq!(hm.remove(73).unwrap(), "Street".to_string());
 }
