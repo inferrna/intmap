@@ -96,11 +96,14 @@ impl<T: std::fmt::Debug> IntMap<T> {
         if let Some(i) = self.find_pos(key) {
             self.entries[i].as_mut().unwrap().value = value;
         } else {
-            loop { //Loop until free position found.
+            let mut cnt = 0;
+            loop { //Loop until free position found
+                assert!(cnt < 3, "Cant't find free position for key {} after {} tries", key, cnt);
                 if let Some(idx) = self.find_free(key, 0) {
                     self.entries[idx] = Some(Entry::new(key, value));
                     break;
                 }
+                cnt += 1;
             }
         }
     }
